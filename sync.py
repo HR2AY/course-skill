@@ -25,6 +25,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 REGISTRY_PATH = os.path.join(SKILL_DIR, "registry.json")
+SESSION_PATH = os.path.join(SKILL_DIR, "session.json")
 
 
 # ---------------------------------------------------------------------------
@@ -128,10 +129,49 @@ def write_course_day_summary(course_dir, target_date, summary):
 # 聚合：所有课程 → skill 级跨课程日摘要
 # ---------------------------------------------------------------------------
 
-def aggregate_to_skill_memory(target_date):
+def aggregate_today_from_session():
     """
-    读取所有已注册课程的 sync/daily/YYYY-MM-DD.json，
-    聚合写入 SKILL_DIR/memory/daily/YYYY-MM-DD.json。
+    今日聚合：直接从 SKILL_DIR/session.json 读取，无需遍历各课程目录。
+    session.json 已包含所有课程的当日实时状态。
+    """
+    session = load_json(SESSION_PATH, default={})
+    today = date.today().isoformat()
+
+    if session.get("date") != today:
+        return None
+
+    course_summaries = []
+    for course_dir, cdata in session.get("courses", {}).items():
+        course_summaries.append({
+            "name": cdata.get("name", os.path.basename(course_dir)),
+            "course_dir": course_dir,
+            "topics": cdata.get("topics", []),
+            "completed_tasks": cdata.get("completed", []),
+            "mistakes": cdata.get("weak_topics", []),
+            "time_minutes": 0,   # 实时 session 不追踪时长，由 events.jsonl 补充
+            "summary": cdata.get("summary", ""),
+        })
+
+    if not course_summaries:
+        return None
+
+    all_topics = [t for c in course_summaries for t in c["topics"]]
+    aggregated = {
+        "date": today,
+        "courses": course_summaries,
+        "total_time_minutes": 0,
+        "all_topics": all_topics,
+        "summary": "",
+    }
+
+    out_path = os.path.join(SKILL_DIR, "memory", "daily", f"{today}.json")
+    save_json(out_path, aggregated)
+    return aggregated
+
+
+def aggregate_history_from_files(target_date):
+    """
+    历史日期聚合：从各课程的 .course/sync/daily/YYYY-MM-DD.json 读取。
     """
     registry = load_json(REGISTRY_PATH, default={"courses": []})
     courses = registry.get("courses", [])
@@ -162,12 +202,19 @@ def aggregate_to_skill_memory(target_date):
         "courses": course_summaries,
         "total_time_minutes": total_minutes,
         "all_topics": all_topics,
-        "summary": "",  # 留空，由 skill.md 填写
+        "summary": "",
     }
 
     out_path = os.path.join(SKILL_DIR, "memory", "daily", f"{target_date}.json")
     save_json(out_path, aggregated)
     return aggregated
+
+
+def aggregate_to_skill_memory(target_date):
+    today = date.today().isoformat()
+    if target_date == today:
+        return aggregate_today_from_session()
+    return aggregate_history_from_files(target_date)
 
 
 # ---------------------------------------------------------------------------

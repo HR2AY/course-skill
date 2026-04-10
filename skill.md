@@ -76,16 +76,16 @@ bootstrap.py 会：
 
 正常对话时按以下优先级使用上下文：
 
-1. bootstrap 注入的 `.course/state/session.json`（今天做了什么、薄弱点）
+1. bootstrap 注入的 `SKILL_DIR/session.json` 中当前课程条目（今天做了什么、薄弱点）
 2. `.course/memory/index.json` 中匹配的长期记忆条目
 3. `.course/processed/knowledge_base/` 中对应话题的结构化知识点
 
 回答具体问题时，若 `knowledge_base/` 有对应 `{topic}.json`，优先从其 `d`/`e`/`t` 字段组织回答，而不是凭空生成。
 
 **每轮对话结束前判断：**
-- 用户完成了某个任务 → 更新 `.course/state/session.json` 的 `completed` 列表
-- 发现新的理解薄弱点 → 更新 `session.json` 的 `weak_topics`，同时写入 `.course/memory/mistakes/`
-- 当日对话结束 → 更新 `session.json` 的 `summary`
+- 用户完成了某个任务 → 更新 `SKILL_DIR/session.json` 中当前课程条目的 `completed` 列表
+- 发现新的理解薄弱点 → 更新当前课程条目的 `weak_topics`，同时写入 `.course/memory/mistakes/`
+- 当日对话结束 → 更新当前课程条目的 `summary`
 
 ---
 

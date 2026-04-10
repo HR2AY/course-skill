@@ -4,8 +4,10 @@ bootstrap.py - 每次 skill 启动时执行
 读取课程状态，输出结构化上下文供 skill.md 注入。
 
 路径约定：
-  SKILL_DIR = 本文件所在目录（skill 代码）
-  COURSE_DIR = 当前工作目录（用户 cd 到的课程文件夹）
+  SKILL_DIR   = 本文件所在目录（skill 代码）
+  COURSE_DIR  = 用户当前工作目录（课程文件夹）
+  COURSE_DATA = COURSE_DIR/.course/（课程数据根目录）
+  SESSION_PATH = SKILL_DIR/session.json（skill 级跨课程当日状态）
 """
 
 import os
@@ -18,6 +20,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 COURSE_DIR = os.getcwd()
 COURSE_DATA = os.path.join(COURSE_DIR, ".course")
+SESSION_PATH = os.path.join(SKILL_DIR, "session.json")
 
 
 def load_json(path, default=None):
@@ -69,19 +72,29 @@ def main():
     config = load_json(config_path)
     today = date.today().isoformat()
 
-    # 2. 读取 session，跨日则重置当日字段、保留延续字段
-    session_path = os.path.join(COURSE_DATA, "state", "session.json")
-    session = load_json(session_path, default={})
+    # 2. 读取 skill 级 session（跨课程当日状态）
+    session_all = load_json(SESSION_PATH, default={})
 
-    if session.get("date") != today:
-        session = {
-            "date": today,
-            "completed": [],
-            "pending": session.get("pending", []),      # 未完成任务延续到今天
-            "weak_topics": session.get("weak_topics", []),  # 薄弱点跨日保留
-            "summary": "",
-        }
-        save_json(session_path, session)
+    if session_all.get("date") != today:
+        # 跨日重置：清空 completed/topics/summary，保留 pending 和 weak_topics
+        prev_courses = session_all.get("courses", {})
+        carried = {}
+        for cdir, cdata in prev_courses.items():
+            carried[cdir] = {
+                "name": cdata.get("name", ""),
+                "completed": [],
+                "pending": cdata.get("pending", []),
+                "weak_topics": cdata.get("weak_topics", []),
+                "topics": [],
+                "summary": "",
+            }
+        session_all = {"date": today, "courses": carried}
+        save_json(SESSION_PATH, session_all)
+
+    # 当前课程的 session 条目
+    session = session_all.get("courses", {}).get(COURSE_DIR, {
+        "completed": [], "pending": [], "weak_topics": [], "topics": [], "summary": "",
+    })
 
     # 3. 读取长期记忆索引
     memory_index_path = os.path.join(COURSE_DATA, "memory", "index.json")
@@ -119,6 +132,7 @@ def main():
         topics = [m.get("topic", "") for m in recent_mistakes if m.get("topic")]
         lines.append(f"近期错题: {', '.join(topics)}")
 
+    lines.append(f"SESSION_PATH: {SESSION_PATH}")
     lines.append(f"COURSE_DIR: {COURSE_DIR}")
     lines.append(f"SKILL_DIR: {SKILL_DIR}")
     lines.append("=== COURSE CONTEXT END ===")

@@ -70,16 +70,6 @@ def init_course():
     if is_new:
         save_json(config_path, CONFIG_DEFAULTS)
 
-    session_path = os.path.join(COURSE_DATA, "state", "session.json")
-    if not os.path.exists(session_path):
-        save_json(session_path, {
-            "date": date.today().isoformat(),
-            "completed": [],
-            "pending": [],
-            "weak_topics": [],
-            "summary": "",
-        })
-
     memory_index_path = os.path.join(COURSE_DATA, "memory", "index.json")
     if not os.path.exists(memory_index_path):
         save_json(memory_index_path, {"mistakes": [], "insights": []})
