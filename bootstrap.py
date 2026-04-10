@@ -17,6 +17,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 COURSE_DIR = os.getcwd()
+COURSE_DATA = os.path.join(COURSE_DIR, ".course")
 
 
 def load_json(path, default=None):
@@ -60,7 +61,7 @@ def make_progress_bar(done, total, width=20):
 
 def main():
     # 1. 验证是否为合法课程目录
-    config_path = os.path.join(COURSE_DIR, "config.json")
+    config_path = os.path.join(COURSE_DATA, "config.json")
     if not os.path.exists(config_path):
         print("NOT_A_COURSE_DIR")
         sys.exit(1)
@@ -69,7 +70,7 @@ def main():
     today = date.today().isoformat()
 
     # 2. 读取 session，跨日则重置当日字段、保留延续字段
-    session_path = os.path.join(COURSE_DIR, "state", "session.json")
+    session_path = os.path.join(COURSE_DATA, "state", "session.json")
     session = load_json(session_path, default={})
 
     if session.get("date") != today:
@@ -83,11 +84,11 @@ def main():
         save_json(session_path, session)
 
     # 3. 读取长期记忆索引
-    memory_index_path = os.path.join(COURSE_DIR, "memory", "index.json")
+    memory_index_path = os.path.join(COURSE_DATA, "memory", "index.json")
     memory_index = load_json(memory_index_path, default={"mistakes": [], "insights": []})
 
     # 4. 读取学期规划，找今日任务
-    plan_path = os.path.join(COURSE_DIR, "state", "semester_plan.json")
+    plan_path = os.path.join(COURSE_DATA, "state", "semester_plan.json")
     plan = load_json(plan_path, default={})
     today_tasks, current_week = find_today_tasks(plan, today)
 

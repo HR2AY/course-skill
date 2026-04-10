@@ -22,6 +22,7 @@ from datetime import date, timedelta
 sys.stdout.reconfigure(encoding="utf-8")
 
 COURSE_DIR = os.getcwd()
+COURSE_DATA = os.path.join(COURSE_DIR, ".course")
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 sys.path.insert(0, SKILL_DIR)
@@ -209,7 +210,7 @@ def render_deadlines(plan, today):
 
 
 def main():
-    plan_path = os.path.join(COURSE_DIR, "state", "semester_plan.json")
+    plan_path = os.path.join(COURSE_DATA, "state", "semester_plan.json")
     plan = load_json(plan_path)
 
     if not plan or not plan.get("weeks"):

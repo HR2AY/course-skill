@@ -15,6 +15,7 @@ from datetime import date
 sys.stdout.reconfigure(encoding="utf-8")
 
 COURSE_DIR = os.getcwd()
+COURSE_DATA = os.path.join(COURSE_DIR, ".course")
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CONFIG_DEFAULTS = {
@@ -27,7 +28,7 @@ CONFIG_DEFAULTS = {
     "notes": "",
 }
 
-# 初始化时需要创建的目录
+# 初始化时在 .course/ 下创建的目录
 DIRS = [
     "uploads/syllabus",
     "uploads/slides",
@@ -62,14 +63,14 @@ def save_json(path, data):
 def init_course():
     """初始化新课程目录，已存在的文件不覆盖。"""
     for d in DIRS:
-        os.makedirs(os.path.join(COURSE_DIR, d), exist_ok=True)
+        os.makedirs(os.path.join(COURSE_DATA, d), exist_ok=True)
 
-    config_path = os.path.join(COURSE_DIR, "config.json")
+    config_path = os.path.join(COURSE_DATA, "config.json")
     is_new = not os.path.exists(config_path)
     if is_new:
         save_json(config_path, CONFIG_DEFAULTS)
 
-    session_path = os.path.join(COURSE_DIR, "state", "session.json")
+    session_path = os.path.join(COURSE_DATA, "state", "session.json")
     if not os.path.exists(session_path):
         save_json(session_path, {
             "date": date.today().isoformat(),
@@ -79,12 +80,12 @@ def init_course():
             "summary": "",
         })
 
-    memory_index_path = os.path.join(COURSE_DIR, "memory", "index.json")
+    memory_index_path = os.path.join(COURSE_DATA, "memory", "index.json")
     if not os.path.exists(memory_index_path):
         save_json(memory_index_path, {"mistakes": [], "insights": []})
 
     # 初始化 calendar 索引
-    calendar_index_path = os.path.join(COURSE_DIR, "calendar", "index.json")
+    calendar_index_path = os.path.join(COURSE_DATA, "calendar", "index.json")
     if not os.path.exists(calendar_index_path):
         save_json(calendar_index_path, {})
 
@@ -118,7 +119,7 @@ def _register_course(course_name):
 
 def show_settings():
     """格式化输出当前配置，供 skill.md 包在代码块里展示。"""
-    config_path = os.path.join(COURSE_DIR, "config.json")
+    config_path = os.path.join(COURSE_DATA, "config.json")
     if not os.path.exists(config_path):
         print("NOT_A_COURSE_DIR: 当前目录没有 config.json，请先运行 /setting init")
         sys.exit(1)

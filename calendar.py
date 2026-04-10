@@ -27,8 +27,9 @@ from datetime import date, datetime
 sys.stdout.reconfigure(encoding="utf-8")
 
 COURSE_DIR = os.getcwd()
-INDEX_PATH = os.path.join(COURSE_DIR, "calendar", "index.json")
-EVENTS_PATH = os.path.join(COURSE_DIR, "calendar", "events.jsonl")
+COURSE_DATA = os.path.join(COURSE_DIR, ".course")
+INDEX_PATH = os.path.join(COURSE_DATA, "calendar", "index.json")
+EVENTS_PATH = os.path.join(COURSE_DATA, "calendar", "events.jsonl")
 
 
 # ---------------------------------------------------------------------------
@@ -186,12 +187,12 @@ def log_event(event):
             day["completed_tasks"].append(task_id)
 
     elif event_type == "mistake":
-        ref = f"memory/mistakes/{event_date}_{topic}.json"
+        ref = f".course/memory/mistakes/{event_date}_{topic}.json"
         if ref not in day["refs"]["mistakes"]:
             day["refs"]["mistakes"].append(ref)
 
     elif event_type == "insight":
-        ref = f"memory/insights/{event_date}_{topic}.json"
+        ref = f".course/memory/insights/{event_date}_{topic}.json"
         if ref not in day["refs"]["insights"]:
             day["refs"]["insights"].append(ref)
 

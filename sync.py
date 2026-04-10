@@ -69,10 +69,11 @@ def load_jsonlines(path):
 
 def summarize_course_day(course_dir, target_date):
     """
-    读取 course_dir/calendar/events.jsonl，
+    读取 course_dir/.course/calendar/events.jsonl，
     提取 target_date 当天的事件，生成摘要字典。
     """
-    events_path = os.path.join(course_dir, "calendar", "events.jsonl")
+    course_data = os.path.join(course_dir, ".course")
+    events_path = os.path.join(course_data, "calendar", "events.jsonl")
     all_events = load_jsonlines(events_path)
 
     day_events = [
@@ -83,7 +84,7 @@ def summarize_course_day(course_dir, target_date):
     if not day_events:
         return None
 
-    config = load_json(os.path.join(course_dir, "config.json"), default={})
+    config = load_json(os.path.join(course_data, "config.json"), default={})
 
     completed_tasks = [
         e.get("task_id", "") for e in day_events
@@ -119,7 +120,7 @@ def summarize_course_day(course_dir, target_date):
 # ---------------------------------------------------------------------------
 
 def write_course_day_summary(course_dir, target_date, summary):
-    path = os.path.join(course_dir, "sync", "daily", f"{target_date}.json")
+    path = os.path.join(course_dir, ".course", "sync", "daily", f"{target_date}.json")
     save_json(path, summary)
 
 
@@ -138,7 +139,7 @@ def aggregate_to_skill_memory(target_date):
     course_summaries = []
     for course in courses:
         course_dir = course.get("path", "")
-        sync_path = os.path.join(course_dir, "sync", "daily", f"{target_date}.json")
+        sync_path = os.path.join(course_dir, ".course", "sync", "daily", f"{target_date}.json")
         summary = load_json(sync_path)
         if summary:
             course_summaries.append({
