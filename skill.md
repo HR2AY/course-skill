@@ -64,7 +64,7 @@ bootstrap.py 会：
 |------|------|
 | `/setting` | 运行 `commands/settings.py`，展示设置面板，读写 `.course/config.json` |
 | `/plan` | 运行 `commands/plan.py`，展示学期规划视图 + 当前进度 + 逾期任务 |
-| `/review` | 进入错题复习模式，从 `memory/mistakes/` 加载薄弱知识点 |
+| `/review` | 进入错题复习模式，加载并执行 `{SKILL_DIR}/prompts/review.md` |
 | `/quiz` | 进入题目生成模式，加载并执行 `{SKILL_DIR}/prompts/quiz.md` |
 | `/help` | 打印命令列表和当前课程基本信息 |
 
