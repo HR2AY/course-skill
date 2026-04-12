@@ -107,9 +107,19 @@ bootstrap.py 会：
 
 1. 从提取的文本中识别：章节/主题列表、考试日期、作业 deadline、周计划安排
 2. 读取 `.course/config.json` 获取学期起止日期和每周学习时长
-3. 生成 `.course/state/semester_plan.json`（格式见下方"学期规划格式"节）
-4. 对有明确日期的任务调用 `calendar.py plan_day` 注册到日历
-5. 运行 `commands/plan.py` 展示学期规划视图
+3. **若 `.course/state/semester_plan.json` 已存在（重新生成场景）**，先读取旧 plan，保存所有旧 task ID 和对应 content，用于后续迁移
+4. 生成新的 `.course/state/semester_plan.json`（格式见下方"学期规划格式"节）
+5. **若存在旧 plan**，对比新旧任务列表，按 content 相似度建立 ID 映射，然后执行迁移：
+   - content 相同或相近 → `{旧ID: 新ID}`
+   - 旧任务在新 plan 中消失 → `{旧ID: null}`（从 calendar 中删除）
+   - 新任务是全新的 → 无需映射
+
+   ```bash
+   python {SKILL_DIR}/calendar.py migrate_ids '{"w01_t01": "w01_t01", "w02_t03": null}'
+   ```
+
+6. 对有明确日期的任务调用 `calendar.py plan_day` 注册到日历
+7. 运行 `commands/plan.py` 展示学期规划视图
 
 ---
 
@@ -122,7 +132,7 @@ bootstrap.py 会：
 ```json
 {
   "course": "信号与系统",
-  "generated_from": "uploads/syllabus/syllabus.pdf",
+  "generated_from": ".course/uploads/syllabus/syllabus.pdf",
   "generated_at": "2026-04-09",
   "weeks": [
     {
@@ -212,7 +222,7 @@ python {SKILL_DIR}/calendar.py plan_day {deadline} '["task_id"]'
   "topic": "卷积定理",
   "error_context": "将卷积和乘法的频域关系搞反",
   "correction": "时域卷积 = 频域相乘，时域相乘 = 频域卷积",
-  "source_knowledge": "processed/knowledge_base/卷积定理.json"
+  "source_knowledge": ".course/processed/knowledge_base/卷积定理.json"
 }
 ```
 

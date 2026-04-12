@@ -228,6 +228,32 @@ def plan_day(target_date, task_ids):
     })
 
 
+def migrate_ids(id_map):
+    """
+    将 calendar/index.json 中所有 task ID 按 id_map 批量替换。
+    id_map: {old_id: new_id}，new_id 为 None 表示从 calendar 中移除该 ID。
+    影响字段：planned_tasks、completed_tasks。
+    返回实际替换的次数。
+    """
+    index = load_index()
+    changed = 0
+    for day_data in index.values():
+        for field in ("planned_tasks", "completed_tasks"):
+            old_list = day_data.get(field, [])
+            new_list = []
+            for tid in old_list:
+                if tid in id_map:
+                    new_id = id_map[tid]
+                    if new_id is not None:
+                        new_list.append(new_id)
+                    changed += 1
+                else:
+                    new_list.append(tid)
+            day_data[field] = new_list
+    save_index(index)
+    return changed
+
+
 def reschedule(task_id, new_date):
     """
     找到 task_id 所在的最早日期，移到 new_date。
@@ -263,7 +289,7 @@ def main():
     args = sys.argv[1:]
     if not args:
         print("用法: python calendar.py <command> [args...]")
-        print("命令: get_day, get_range, get_topic, get_overdue, log, reschedule, plan_day")
+        print("命令: get_day, get_range, get_topic, get_overdue, log, reschedule, plan_day, migrate_ids")
         sys.exit(1)
 
     cmd = args[0]
@@ -308,6 +334,15 @@ def main():
         task_ids = json.loads(args[2])
         plan_day(args[1], task_ids)
         print("PLAN_SET")
+
+    elif cmd == "migrate_ids":
+        if len(args) < 2:
+            print("用法: python calendar.py migrate_ids '{\"old_id\": \"new_id\", ...}'")
+            print("      new_id 为 null 表示从 calendar 中删除该 ID")
+            sys.exit(1)
+        id_map = json.loads(args[1])
+        n = migrate_ids(id_map)
+        print(f"MIGRATE_OK: 替换了 {n} 处 task ID 引用")
 
     else:
         print(f"未知命令: {cmd}")
