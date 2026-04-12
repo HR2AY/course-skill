@@ -62,6 +62,7 @@ bootstrap.py 会：
 
 | 命令 | 行为 |
 |------|------|
+| `/start` | 每日启动，加载并执行 `{SKILL_DIR}/prompts/start.md` |
 | `/setting` | 运行 `commands/settings.py`，展示设置面板，读写 `.course/config.json` |
 | `/plan` | 运行 `commands/plan.py`，展示学期规划视图 + 当前进度 + 逾期任务 |
 | `/review` | 进入错题复习模式，加载并执行 `{SKILL_DIR}/prompts/review.md` |
